@@ -1,4 +1,4 @@
 # Cina-skuy
-Rayinda Gusti : frontend & UI/UX specialist
-Muh agil  :Backend & Database engineer
-muh ulil  : QA, DevOps & Intergration Specialist
+1. Rayinda Gusti : frontend & UI/UX specialist
+2. Muh agil  :Backend & Database engineer
+3. muh ulil  : QA, DevOps & Intergration Specialist
