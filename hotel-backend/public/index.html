@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hotel Nusantara – Studi Kasus</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1d2330;--mut:#6b7280;--pri:#0f766e;--prt:#fff;--bd:#e3e1da;--err:#b42318;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b212a;--tx:#eceff4;--mut:#9aa4b2;--pri:#2dd4bf;--prt:#06201d;--bd:#2b3340;--err:#f97066}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b212a;--tx:#eceff4;--mut:#9aa4b2;--pri:#2dd4bf;--prt:#06201d;--bd:#2b3340;--err:#f97066}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+#app{max-width:480px;margin:0 auto;padding:16px 16px 84px}
+h1{font-size:22px;margin:4px 0 2px}h2{font-size:18px;margin:0 0 10px}
+.mut{color:var(--mut);font-size:13px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:0 0 12px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input,select{width:100%;padding:11px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 16px;background:var(--pri);color:var(--prt);font-weight:600}
+button.sec{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+button.full{width:100%;margin-top:14px}
+.err{color:var(--err);font-size:13px;margin-top:8px;min-height:18px}
+.emo{font-size:30px}.price{font-weight:700;color:var(--pri)}
+.tag{font-size:12px;padding:2px 9px;border-radius:20px;border:1px solid var(--bd)}
+.ok{color:var(--pri);border-color:var(--pri)}.wait{color:#b7791f;border-color:#b7791f}.bad{color:var(--err);border-color:var(--err)}
+.sum td{padding:3px 0}.sum td:last-child{text-align:right}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav div{display:flex;width:100%;max-width:480px}
+nav button{flex:1;background:none;color:var(--mut);border-radius:0;padding:12px 4px;font-size:12px}
+nav button.on{color:var(--pri)}
+.opt{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;cursor:pointer}
+.opt input{width:auto}
+</style></head><body><div id="app"></div><nav id="nav" hidden><div></div></nav>
+<script>
+var ROOMS=[
+{id:1,n:"Standard",p:350000,c:2,e:"🛏️",d:"Kasur queen, AC, WiFi gratis"},
+{id:2,n:"Deluxe",p:550000,c:2,e:"🌇",d:"Pemandangan kota, bathtub, sarapan"},
+{id:3,n:"Family",p:750000,c:4,e:"👨‍👩‍👧",d:"2 kamar tidur, ruang keluarga"},
+{id:4,n:"Suite",p:950000,c:3,e:"👑",d:"Ruang tamu, balkon, akses lounge"}];
+var S={view:"login",tab:"login",user:null,draft:null,pay:null,msg:"",q:"",cap:0};
+function ld(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var books=[];
+S.user=ld("h_sess",null);if(S.user)S.view="home";
+function rp(n){return "Rp "+Number(n).toLocaleString("id-ID")}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function today(o){var d=new Date();d.setDate(d.getDate()+(o||0));return d.toISOString().slice(0,10)}
+function nights(a,b){return Math.round((new Date(b)-new Date(a))/864e5)}
+function tot(r,n){var s=r.p*n;return{s:s,t:Math.round(s*.1),g:Math.round(s*1.1)}}
+function go(v){S.view=v;S.msg="";render()}
+function render(){
+ var a=document.getElementById("app"),nv=document.getElementById("nav");
+ nv.hidden=!S.user||S.view=="login";
+ if(!nv.hidden){nv.firstChild.innerHTML=[["home","🏠","Home"],["hist","🧾","Riwayat"],["out","🚪","Keluar"]].map(function(x){return '<button data-a="nav" data-v="'+x[0]+'" class="'+(S.view==x[0]?"on":"")+'">'+x[1]+'<br>'+x[2]+'</button>'}).join("")}
+ var h="",e='<div class="err">'+esc(S.msg)+'</div>';
+ if(S.view=="login"){
+  var rg=S.tab=="reg";
+  h='<h1>🏨 Hotel Nusantara</h1><p class="mut">Studi kasus aplikasi pemesanan hotel</p><div class="card"><h2>'+(rg?"Daftar Akun":"Masuk")+'</h2>'+
+  (rg?'<label>Nama</label><input id="nm">':'')+'<label>Email</label><input id="em" type="email" value="'+(rg?"":"demo@hotel.id")+'"><label>Kata sandi</label><input id="pw" type="password" value="'+(rg?"":"demo123")+'">'+e+
+  '<button class="full" data-a="'+(rg?"reg":"login")+'">'+(rg?"Daftar":"Masuk")+'</button><button class="sec full" data-a="tab">'+(rg?"Sudah punya akun? Masuk":"Belum punya akun? Daftar")+'</button></div><p class="mut">Akun demo sudah terisi: demo@hotel.id / demo123</p>';
+ }
+ if(S.view=="home"){
+  var l=ROOMS.filter(function(r){return r.c>=S.cap&&r.n.toLowerCase().indexOf(S.q)>-1});
+  h='<h1>Halo, '+esc(S.user.name)+' 👋</h1><p class="mut">Mau menginap di mana hari ini?</p><div class="row"><input id="q" placeholder="Cari tipe kamar" value="'+esc(S.q)+'"><select id="cap" style="width:130px"><option value="0">Semua</option>'+[2,3,4].map(function(n){return '<option value="'+n+'"'+(S.cap==n?" selected":"")+'>≥ '+n+' tamu</option>'}).join("")+'</select></div><div style="height:12px"></div>'+
+  (l.length?l.map(function(r){return '<div class="card"><div class="row"><div class="emo">'+r.e+'</div><div style="flex:1"><b>'+r.n+'</b><div class="mut">'+r.d+' · maks '+r.c+' tamu</div></div></div><div class="row" style="margin-top:10px"><span class="price">'+rp(r.p)+' <span class="mut">/malam</span></span><button data-a="pick" data-id="'+r.id+'">Pesan</button></div></div>'}).join(""):'<p class="mut">Kamar tidak ditemukan.</p>');
+ }
+ if(S.view=="book"){
+  var d=S.draft,r=ROOMS[d.room-1],n=nights(d.in,d.out),t=n>0?tot(r,n):null;
+  h='<h2>Pemesanan Kamar</h2><div class="card"><b>'+r.e+' '+r.n+'</b><div class="mut">'+rp(r.p)+' / malam</div>'+
+  '<label>Check-in</label><input type="date" id="ci" min="'+today()+'" value="'+d.in+'"><label>Check-out</label><input type="date" id="co" min="'+today(1)+'" value="'+d.out+'"><label>Jumlah tamu</label><select id="gs">'+Array.from({length:r.c},function(_,i){return '<option'+(d.g==i+1?" selected":"")+'>'+(i+1)+'</option>'}).join("")+'</select></div>'+
+  '<div class="card"><table class="sum" style="width:100%">'+(t?'<tr><td>'+n+' malam × '+rp(r.p)+'</td><td>'+rp(t.s)+'</td></tr><tr><td>Pajak 10%</td><td>'+rp(t.t)+'</td></tr><tr><td><b>Total</b></td><td class="price">'+rp(t.g)+'</td></tr>':'<tr><td class="err">Tanggal check-out harus setelah check-in</td></tr>')+'</table></div>'+e+
+  '<button class="full" data-a="book">Lanjut ke Pembayaran</button><button class="sec full" data-a="nav" data-v="home">Batal</button>';
+ }
+ if(S.view=="pay"){
+  var b=books.filter(function(x){return x.id==S.pay})[0];
+  h='<h2>Pembayaran</h2><div class="card"><b>'+b.room+'</b><div class="mut">'+b.in+' → '+b.out+' · '+b.n+' malam · '+b.g+' tamu</div><div class="row" style="margin-top:8px"><span>Total tagihan</span><span class="price">'+rp(b.total)+'</span></div></div><div class="card"><b>Metode pembayaran</b><div style="height:8px"></div>'+
+  ["Transfer Bank (BCA)","QRIS","Kartu Kredit"].map(function(m,i){return '<label class="opt" style="margin:0 0 8px;color:var(--tx);font-size:15px"><input type="radio" name="m" value="'+m+'"'+(i==0?" checked":"")+'>'+m+'</label>'}).join("")+'</div>'+e+
+  '<button class="full" data-a="paynow" data-id="'+b.id+'">Bayar Sekarang</button><button class="sec full" data-a="nav" data-v="hist">Bayar nanti</button>';
+ }
+ if(S.view=="hist"){
+  var m=books.filter(function(x){return x.u==S.user.email}).reverse();
+  h='<h2>Riwayat Pemesanan</h2>'+(m.length?m.map(function(b){var c=b.st=="Lunas"?"ok":b.st=="Dibatalkan"?"bad":"wait";
+  return '<div class="card"><div class="row"><b>'+b.room+'</b><span class="tag '+c+'">'+b.st+'</span></div><div class="mut">Kode '+b.code+' · '+b.in+' → '+b.out+'</div><div class="row" style="margin-top:8px"><span class="price">'+rp(b.total)+'</span><span>'+(b.st=="Menunggu Pembayaran"?'<button data-a="topay" data-id="'+b.id+'">Bayar</button> <button class="sec" data-a="cancel" data-id="'+b.id+'">Batal</button>':b.st=="Lunas"?'<span class="mut">via '+b.m+'</span>':'')+'</span></div></div>'}).join(""):'<p class="mut">Belum ada pemesanan.</p>');
+ }
+ if(S.view=="done"){
+  var b2=books.filter(function(x){return x.id==S.pay})[0];
+  h='<div class="card" style="text-align:center"><div class="emo">✅</div><h2>Pembayaran Berhasil</h2><p class="mut">Kode pemesanan</p><h1>'+b2.code+'</h1><p>'+b2.room+' · '+b2.in+' → '+b2.out+'</p></div><button class="full" data-a="nav" data-v="hist">Lihat Riwayat</button><button class="sec full" data-a="nav" data-v="home">Kembali ke Home</button>';
+ }
+ a.innerHTML=h;
+}
+async function api(p,m,b){var r=await fetch("/api"+p,{method:m||"GET",headers:{"Content-Type":"application/json","Authorization":"Bearer "+(S.user&&S.user.token||"")},body:b?JSON.stringify(b):undefined});var j=await r.json().catch(function(){return{}});if(!r.ok){var e=new Error(j.error||"Terjadi kesalahan");e.status=r.status;throw e}return j}
+function logout(){S.user=null;books=[];sv("h_sess",null);S.tab="login"}
+async function loadBooks(){try{books=await api("/bookings")}catch(e){if(e.status==401){logout();S.view="login"}}}
+function rep(b){books=books.map(function(x){return x.id==b.id?b:x})}
+document.addEventListener("click",async function(ev){
+ var t=ev.target.closest("[data-a]");if(!t)return;
+ var a=t.dataset.a,$=function(i){var el=document.getElementById(i);return el?el.value.trim():""};
+ try{
+ if(a=="tab"){S.tab=S.tab=="reg"?"login":"reg";S.msg="";return render()}
+ if(a=="login"||a=="reg"){var r=await api(a=="reg"?"/register":"/login","POST",a=="reg"?{name:$("nm"),email:$("em"),password:$("pw")}:{email:$("em"),password:$("pw")});
+  S.user={name:r.user.name,email:r.user.email,token:r.token};sv("h_sess",S.user);await loadBooks();return go("home")}
+ if(a=="nav"){if(t.dataset.v=="out"){logout();return go("login")}if(t.dataset.v=="hist")await loadBooks();return go(t.dataset.v)}
+ if(a=="pick"){S.draft={room:+t.dataset.id,in:today(1),out:today(2),g:1};return go("book")}
+ if(a=="book"){var d=S.draft;d.in=$("ci");d.out=$("co");d.g=+$("gs");
+  var b=await api("/bookings","POST",{room:d.room,in:d.in,out:d.out,guests:d.g});books.push(b);S.pay=b.id;return go("pay")}
+ if(a=="topay"){S.pay=+t.dataset.id;return go("pay")}
+ if(a=="paynow"){var m=document.querySelector("input[name=m]:checked");var p=await api("/bookings/"+t.dataset.id+"/pay","POST",{method:m?m.value:""});rep(p);S.pay=p.id;return go("done")}
+ if(a=="cancel"){rep(await api("/bookings/"+t.dataset.id+"/cancel","POST"));return render()}
+ }catch(e){if(e.status==401){logout();S.view="login"}S.msg=e.message;render()}
+});
+document.addEventListener("input",function(ev){
+ if(ev.target.id=="q"){S.q=ev.target.value.toLowerCase();var p=ev.target.selectionStart;render();var q=document.getElementById("q");q.focus();q.setSelectionRange(p,p)}
+ if(ev.target.id=="cap"){S.cap=+ev.target.value;render()}
+ if(S.view=="book"&&(ev.target.id=="ci"||ev.target.id=="co"||ev.target.id=="gs")){S.draft.in=document.getElementById("ci").value;S.draft.out=document.getElementById("co").value;S.draft.g=+document.getElementById("gs").value;render()}
+});
+if(S.user){loadBooks().then(render)}else{render()}
+</script></body></html>
